@@ -1,64 +1,53 @@
-// components/TinyEditor.tsx
+'use client'
 
-'use client';
-
-import { forwardRef, useEffect, useRef, useImperativeHandle } from 'react';
-import tinymce from 'tinymce/tinymce';
-import 'tinymce/icons/default';
-import 'tinymce/themes/silver';
-import 'tinymce/plugins/link';
-import 'tinymce/plugins/table';
-import 'tinymce/plugins/image';
-import 'tinymce/plugins/code';
+import React, {useEffect, useRef} from 'react';
+import {Editor} from '@tinymce/tinymce-react';
 
 interface TinyEditorProps {
-  initialValue: string;
-  onEditorChange: (content: string) => void;
+    initialValue?: string;
+    onEditorChange: (content: string) => void;
 }
 
-export interface TinyEditorRef {
-  getContent: () => string;
-}
+export default function TinyEditorRef({ initialValue, onEditorChange }: TinyEditorProps) {
+    const editorRef = useRef<any>(null);
 
-const TinyEditor = forwardRef<TinyEditorRef, TinyEditorProps>(({ initialValue, onEditorChange }, ref) => {
-  const editorRef = useRef<tinymce.Editor | null>(null);
+    const onUserPast = (e: any) => {
+        console.log('onUserPast:: ', e)
+    }
 
-  useEffect(() => {
-    tinymce.init({
-      selector: '#tiny-mce-editor',
-      plugins: 'link table image code',
-      toolbar: 'undo redo | formatselect | bold italic | ' +
-        'alignleft aligncenter alignright alignjustify | ' +
-        'bullist numlist outdent indent | link image code',
-      setup: (editor) => {
-        editorRef.current = editor;
-        editor.on('change', () => {
-          onEditorChange(editor.getContent());
-        });
-      },
-      base_url: '/tinymce',
-      suffix: '.min',
-    });
+    const onChangeContent = (content: any) => {
+        onEditorChange(editorRef.current?.getContent() || '')
+        console.log('onChangeContent:: ', editorRef.current?.getContent())
+    }
 
-    return () => {
-      if (editorRef.current) {
-        editorRef.current.remove();
-      }
+    const log = () => {
+        if (editorRef.current) {
+            console.log(editorRef.current?.getContent());
+        }
     };
-  }, [onEditorChange]);
 
-  useImperativeHandle(ref, () => ({
-    getContent: () => editorRef.current ? editorRef.current.getContent() : ''
-  }), []);
-
-  return (
-    <textarea
-      id="tiny-mce-editor"
-      defaultValue={initialValue}
-    />
-  );
-});
-
-TinyEditor.displayName = 'TinyEditor';
-
-export default TinyEditor;
+    return (
+        <>
+            <Editor
+                id="tiny-mce-editor"
+                licenseKey='gpl'
+                tinymceScriptSrc={'/tinymce/tinymce.min.js'}
+                onInit={(evt, editor: any) => editorRef.current = editor}
+                initialValue={initialValue || ''}
+                init={{
+                    height: 350,
+                    menubar: false,
+                    plugins: [
+                        'lists', 'image', 'charmap', 'code', 'fullscreen', 'table', 'media '
+                    ],
+                    toolbar: 'undo redo | bold italic | alignleft aligncenter | table image ' +
+                        'alignright alignjustify | bullist numlist outdent indent | removeformat',
+                    content_style: 'body { font-family: Helvetica, Arial, sans-serif; font-size:14px }'
+                }}
+                onPaste={onUserPast} onChange={onChangeContent}/>
+            <p>----------------------</p>
+            <p>Change it:: </p>
+            <button onClick={log}>Log editor content</button>
+        </>
+    );
+}
