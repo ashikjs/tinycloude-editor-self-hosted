@@ -10,6 +10,8 @@ import 'tinymce/plugins/link';
 import 'tinymce/plugins/table';
 import 'tinymce/plugins/image';
 import 'tinymce/plugins/code';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
 
 interface TinyEditorProps {
   initialValue: string;
@@ -29,9 +31,53 @@ const TinyEditor = forwardRef<TinyEditorRef, TinyEditorProps>(({ initialValue, o
       plugins: 'link table image code',
       toolbar: 'undo redo | formatselect | bold italic | ' +
         'alignleft aligncenter alignright alignjustify | ' +
-        'bullist numlist outdent indent | link image code',
+        'bullist numlist outdent indent | link image code katexButton',
       setup: (editor) => {
         editorRef.current = editor;
+
+        editor.ui.registry.addButton('katexButton', {
+          icon: 'formula',
+          tooltip: 'Insert KaTeX',
+          onAction: () => {
+            editor.execCommand('katex');
+          }
+        });
+
+        editor.addCommand('katex', () => {
+          editor.windowManager.open({
+            title: 'Insert KaTeX',
+            body: {
+              type: 'panel',
+              items: [
+                {
+                  type: 'textarea',
+                  name: 'katex',
+                  label: 'KaTeX',
+                },
+              ],
+            },
+            buttons: [
+              {
+                text: 'Close',
+                type: 'cancel',
+              },
+              {
+                text: 'Insert',
+                type: 'submit',
+                primary: true,
+              },
+            ],
+            onSubmit: function (api) {
+              const data = api.getData();
+              const katexHtml = katex.renderToString(data.katex, {
+                throwOnError: false,
+              });
+              editor.insertContent(katexHtml);
+              api.close();
+            },
+          });
+        });
+
         editor.on('change', () => {
           onEditorChange(editor.getContent());
         });
