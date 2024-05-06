@@ -3,6 +3,10 @@
 'use client';
 
 import {useState} from 'react';
+import 'katex/dist/katex.min.css'
+
+import SafeHtmlRenderer from "@/components/SafeHtmlRenderer";
+import TinyEditorWithKatexRef from "@/components/TinyEditor-with-katex";
 import TinyEditorRef from "@/components/TinyEditor";
 
 export default function Home() {
@@ -18,8 +22,12 @@ export default function Home() {
             <TinyEditorRef initialValue={'<p>sdjk gduigfvd58gv4df 5g6df</p>'}
                            onEditorChange={onChangeEditor}
             />
+
+            {/*<TinyEditorWithKatexRef initialValue={'<p>sdjk gduigfvd58gv4df 5g6df</p>'}*/}
+            {/*                        onEditorChange={onChangeEditor}*/}
+            {/*/>*/}
             <h2 className="text-xl font-bold mt-4">Editor Content:</h2>
-            <div className="border p-4" dangerouslySetInnerHTML={{__html: editorContent}}></div>
+            <SafeHtmlRenderer html={editorContent}/>
         </div>
 
     );

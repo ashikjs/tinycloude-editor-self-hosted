@@ -2,17 +2,45 @@
 
 import React, {useRef} from 'react';
 import {Editor} from '@tinymce/tinymce-react';
+import katex from 'katex';
+import 'katex/dist/katex.min.css'
 
 
 interface TinyEditorProps {
     initialValue?: string;
     onEditorChange: (content: string) => void;
 }
-export default function TinyEditorRef({initialValue, onEditorChange}: TinyEditorProps) {
+export default function TinyEditorWithKatexRef({initialValue, onEditorChange}: TinyEditorProps) {
     const editorRef = useRef<any>(null);
+    const lastContentRef = useRef<string>('');
+
+    const checkLatexAndConvertToKatex = (content: string) => {
+        const latexPattern: RegExp = /\\\[[^\]]+\\\]/g;
+
+        if (latexPattern.test(content)) {
+            content = content.replace(latexPattern, match => {
+                const equation = match.slice(2, -2).trim();
+                const katexHtml = katex.renderToString(equation, {
+                    throwOnError: false,
+                    displayMode: true,
+                });
+
+                return katexHtml;
+            });
+
+            if (content !== lastContentRef.current) {
+                lastContentRef.current = content;
+                editorRef.current?.setContent(content, { format: 'raw' });
+            }
+        }
+    }
 
     const onChangeContent = (c: any) => {
-        onEditorChange(editorRef.current?.getContent() || '');
+        const content = editorRef.current?.getContent() || '';
+        if (content !== lastContentRef.current) {
+            onEditorChange(content);
+            checkLatexAndConvertToKatex(content);
+        }
     }
 
     return (
